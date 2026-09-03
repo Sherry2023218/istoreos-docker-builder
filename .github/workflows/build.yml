@@ -28,7 +28,8 @@ jobs:
           tar -I zstd -xf imagebuilder.tar.zst --strip-components=1
       - name: Fix uci‑defaults execute permission
         run: |
-          chmod +x targets/armsr/files/etc/uci-defaults/*
+          mkdir -p targets/armsr/files/etc/uci-defaults
+          chmod +x targets/armsr/files/etc/uci-defaults/* 2>/dev/null || true
       - name: Execute build.sh generate rootfs.tar.gz
         run: |
           cd targets/armsr
