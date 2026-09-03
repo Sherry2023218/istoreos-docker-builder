@@ -20,8 +20,8 @@ jobs:
         run: |
           cd targets/armsr
           # 可自行替换fw.koolcenter.com/iStoreOS/ib/下其他版本的armsr ib包
-          wget https://fw0.koolcenter.com/iStoreOS/ib/armsr/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst
-          tar --zstd -xvf istoreos-imagebuilder-armsr-armv8.tar.zst
+          wget --tries=10 --retry-connrefused -O imagebuilder.tar.zst "https://fw0.koolcenter.com/iStoreOS/ib/armsr/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst"
+          tar -I zstd -xf imagebuilder.tar.zst --strip-components=1
 
       - name: Execute build.sh generate rootfs.tar.gz
         run: |
