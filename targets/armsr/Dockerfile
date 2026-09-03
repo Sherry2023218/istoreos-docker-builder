@@ -1,5 +1,5 @@
 FROM scratch
-ADD bin/*.tar.gz /
-ENV container docker
+ADD bin/targets/armsr/generic/rootfs.tar.gz /
+ENV container=docker
 STOPSIGNAL SIGTERM
 ENTRYPOINT ["/sbin/init"]
