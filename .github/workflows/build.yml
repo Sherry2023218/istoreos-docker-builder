@@ -1,4 +1,7 @@
 name: Build iStoreOS‑Docker ARM64(armsr) rootfs
+permissions:
+  contents: read
+  packages: write
 on:
   workflow_dispatch: # 网页手动触发编译，不需要push自动编译就注释掉push
 #  push:
@@ -6,6 +9,8 @@ on:
 jobs:
   build_armsr:
     runs-on: ubuntu-22.04
+    env:
+      GHCR_IMAGE: ghcr.io/sherry2023218/istoreos-armsr:latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -56,7 +61,4 @@ jobs:
           file: ./targets/armsr/Dockerfile
           platforms: linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository_owner | toLower }}/istoreos-armsr:latest
-
-
-
+          tags: ${{ env.GHCR_IMAGE }}
