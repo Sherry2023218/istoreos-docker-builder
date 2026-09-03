@@ -18,6 +18,32 @@ URL=$(curl -s https://api.github.com/repos/vernesong/OpenClash/releases/latest \
     #echo "OpenClash latest ipk: $URL"
     wget "$URL" -P packages/
 
+API_URL="https://api.github.com/repos/pymumu/smartdns/releases/latest"
+# 2. 请求API，提取ipk下载链接，匹配 aarch64 / all 架构
+SMARTDNS_URLS=$(curl -s -H "Accept: application/vnd.github.v3+json" "$API_URL" \
+    | grep -oE '"browser_download_url": *"[^"]+\.ipk"' \
+    | cut -d'"' -f4 \
+    | grep -E "(aarch64|all)")
+
+if [ -n "$SMARTDNS_URLS" ]; then
+    mkdir -p packages/
+    for url in $SMARTDNS_URLS; do
+        echo "   -> 下载: $url"
+        wget --retry-connrefused --tries=3 -q "$url" -P packages/
+        if [ $? -ne 0 ]; then
+            echo "❌ 下载失败: $url"
+            exit 1
+        fi
+    done
+    echo "✅ 下载完成，安装包已保存在 packages/ 目录中。"
+else
+    echo "❌ 错误: 无法解析到符合条件的 SmartDNS ipk 下载链接！"
+    echo "API原始返回调试："
+    curl -s -H "Accept: application/vnd.github.v3+json" "$API_URL" | head -200
+    exit 1
+fi
+
+
 make image \
   PACKAGES="$(tr '\n' ' ' < packages.list) luci-app-openclash luci-compat bash curl ca-bundle ip-full iptables-mod-tproxy iptables-mod-extra kmod-tun kmod-inet-diag unzip coreutils-nohup ruby ruby-yaml" \
   FILES=files
