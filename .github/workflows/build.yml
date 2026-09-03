@@ -33,6 +33,7 @@ jobs:
       - name: Execute build.sh generate rootfs.tar.gz
         run: |
           cd targets/armsr
+          chmod +x ./build.sh
           ./build.sh
       - name: Upload rootfs artifact
         uses: actions/upload-artifact@v4
