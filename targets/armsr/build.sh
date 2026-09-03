@@ -45,5 +45,5 @@ fi
 
 
 make image \
-  PACKAGES="$(tr '\n' ' ' < packages.list) luci-app-openclash luci-compat bash curl ca-bundle ip-full iptables-mod-tproxy iptables-mod-extra kmod-tun kmod-inet-diag unzip coreutils-nohup ruby ruby-yaml" \
+  PACKAGES="$(tr '\n' ' ' < packages.list) luci-app-openclash luci-compat bash curl ca-bundle ip-full iptables-mod-extra kmod-tun kmod-inet-diag unzip" \
   FILES=files
