@@ -3,7 +3,6 @@ on:
   workflow_dispatch: # 网页手动触发编译，不需要push自动编译就注释掉push
 #  push:
 #    branches: [ master ]
-
 jobs:
   build_armsr:
     runs-on: ubuntu-22.04
@@ -16,11 +15,19 @@ jobs:
           sudo apt update
           sudo apt install -y tar zstd wget curl bzip2
 
+      - name: Cache ImageBuilder tar.zst
+        uses: actions/cache@v4
+        with:
+          path: targets/armsr/imagebuilder.tar.zst
+          key: ib-armsr-armv8-20260904
+
       - name: Download iStoreOS ImageBuilder armsr (arm64)
         run: |
           cd targets/armsr
-          # 可自行替换fw.koolcenter.com/iStoreOS/ib/下其他版本的armsr ib包
-          wget --tries=10 --retry-connrefused -O imagebuilder.tar.zst "https://fw0.koolcenter.com/iStoreOS/ib/armsr/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst"
+          # 缓存不存在才下载
+          if [ ! -f "imagebuilder.tar.zst" ];then
+            wget --tries=10 --retry-connrefused -O imagebuilder.tar.zst "https://fw0.koolcenter.com/iStoreOS/ib/armsr/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst"
+          fi
           tar -I zstd -xf imagebuilder.tar.zst --strip-components=1
 
       - name: Execute build.sh generate rootfs.tar.gz
