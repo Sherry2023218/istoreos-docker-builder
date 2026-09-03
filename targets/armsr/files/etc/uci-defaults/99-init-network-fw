@@ -1,0 +1,36 @@
+#设置 lan 为静态地址 ip 为 192.168.31.7，网关为 192.168.31.1 DNS 服务器为 192.168.31.1 关闭 DHCP 服务
+uci set network.lan.proto='static' 
+uci set network.lan.ipaddr='192.168.31.7' 
+uci set network.lan.netmask='255.255.255.0' 
+uci set network.lan.gateway='192.168.31.1' 
+uci set network.lan.peerdns='0' 
+uci delete network.lan.dns 
+uci add_list network.lan.dns='192.168.31.1'  
+#关闭 DHCP 服务
+uci set dhcp.lan.ignore='1'  
+uci commit network 
+uci commit dhcp 
+/etc/init.d/dnsmasq restart 
+/etc/init.d/network reload  
+#  lan开启ip动态伪装
+uci set firewall.@zone[0].masq='1'
+uci commit firewall  
+# 开启丢弃无效包 
+uci set firewall.@defaults[0].drop_invalid='1'
+uci commit firewall 
+/etc/init.d/firewall reload  
+
+#首页显示模块精简
+uci set quickstart.main='quickstart'
+uci set quickstart.modules='disableddisplay'
+# 清空已有的 module 列表（防止重复添加）
+#uci del quickstart.modules.module
+uci add_list quickstart.modules.module='quickActions' 
+uci add_list quickstart.modules.module='networkConnection' 
+uci add_list quickstart.modules.module='networkInterface' 
+uci add_list quickstart.modules.module='configModule' 
+uci add_list quickstart.modules.module='diskInfo' 
+uci add_list quickstart.modules.module='storage' 
+uci add_list quickstart.modules.module='downloadService' 
+uci add_list quickstart.modules.module='remoteDomain'
+uci commit quickstart  
