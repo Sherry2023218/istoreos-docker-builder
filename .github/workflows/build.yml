@@ -56,5 +56,6 @@ jobs:
           file: ./targets/armsr/Dockerfile
           platforms: linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository_owner | toLower }}/istoreos‑armsr:latest
+          tags: ghcr.io/${{ github.repository_owner | toLower }}/istoreos-armsr:latest
+
 
