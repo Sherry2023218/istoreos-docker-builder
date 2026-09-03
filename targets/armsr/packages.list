@@ -9,3 +9,5 @@ luci-i18n-argon-config-zh-cn
 luci-i18n-ttyd-zh-cn
 luci-i18n-filetransfer-zh-cn
 luci-i18n-firewall-zh-cn
+luci-app-smartdns
+luci-i18n-smartdns-zh-cn
