@@ -1,0 +1,35 @@
+name: Build iStoreOS‑Docker ARM64(armsr) rootfs
+on:
+  workflow_dispatch: # 网页手动触发编译，不需要push自动编译就注释掉push
+#  push:
+#    branches: [ master ]
+
+jobs:
+  build_armsr:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y tar zstd wget curl bzip2
+
+      - name: Download iStoreOS ImageBuilder armsr (arm64)
+        run: |
+          cd targets/armsr
+          # 可自行替换fw.koolcenter.com/iStoreOS/ib/下其他版本的armsr ib包
+          wget https://fw.koolcenter.com/iStoreOS/ib/istoreos-imagebuilder-armsr-armv8.tar.zst
+          tar --zstd -xvf istoreos-imagebuilder-armsr-armv8.tar.zst
+
+      - name: Execute build.sh generate rootfs.tar.gz
+        run: |
+          cd targets/armsr
+          ./build.sh
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: istoreos-docker-armsr-armv8-rootfs
+          path: targets/armsr/bin/*.tar.gz
