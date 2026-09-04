@@ -1,0 +1,62 @@
+name: Build iStoreOS‑Docker ARM64(armsr) rootfs
+permissions:
+  contents: read
+  packages: write
+on:
+  workflow_dispatch: # 网页手动触发编译，不需要push自动编译就注释掉push
+#  push:
+#    branches: [ master ]
+jobs:
+  build_armsr:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y tar zstd wget curl bzip2
+      - name: Cache ImageBuilder tar.zst
+        uses: actions/cache@v4
+        with:
+          path: targets/armsr/imagebuilder.tar.zst
+          key: ib-armsr-armv8-20260904
+      - name: Download iStoreOS ImageBuilder armsr (arm64)
+        run: |
+          cd targets/armsr
+          # 缓存不存在才下载，避免每次拉280MB大包
+          if [ ! -f "imagebuilder.tar.zst" ];then
+            wget --tries=10 --retry-connrefused -O imagebuilder.tar.zst "https://fw0.koolcenter.com/iStoreOS/ib/armsr/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst"
+          fi
+          tar -I zstd -xf imagebuilder.tar.zst --strip-components=1
+      - name: Fix uci‑defaults execute permission
+        run: |
+          mkdir -p targets/armsr/files/etc/uci-defaults
+          chmod +x targets/armsr/files/etc/uci-defaults/* 2>/dev/null || true
+      - name: Execute build.sh generate rootfs.tar.gz
+        run: |
+          cd targets/armsr
+          chmod +x ./build.sh
+          ./build.sh
+      - name: Upload rootfs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: istoreos-docker-armsr-armv8-rootfs
+          path: targets/armsr/bin/*.tar.gz
+      # ========== 新增：构建Docker镜像并推送ghcr.io ==========
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./targets/armsr
+          file: ./targets/armsr/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner | toLower }}/istoreos-armsr:latest
