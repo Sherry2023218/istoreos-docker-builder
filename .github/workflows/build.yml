@@ -28,7 +28,10 @@ jobs:
           if [ ! -f "imagebuilder.tar.zst" ];then
             wget --tries=10 --retry-connrefused -O imagebuilder.tar.zst "https://fw0.koolcenter.com/iStoreOS/ib/armsr/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst"
           fi
-          tar -I zstd -xf imagebuilder.tar.zst --strip-components=1
+          # 关键：只有Makefile不存在才解压，不要每次运行都解压！
+          if [ ! -f "Makefile" ];then
+            tar -I zstd -xf imagebuilder.tar.zst --strip-components=1
+          fi
 
       - name: Fix uci-defaults execute permission
         run: |
