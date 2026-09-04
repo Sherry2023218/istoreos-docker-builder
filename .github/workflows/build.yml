@@ -1,5 +1,7 @@
 name: Build iStoreOS‑armsr Docker Image
-
+permissions:
+  contents: read
+  packages: write
 on:
   workflow_dispatch:
 
