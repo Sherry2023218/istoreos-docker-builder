@@ -1,4 +1,4 @@
-name: Build iStoreOS‑Docker ARM64(armsr) rootfs
+name: Build iStoreOS‑Docker ARM64 rootfs
 permissions:
   contents: read
   packages: write
