@@ -7,5 +7,6 @@ make image \
   PACKAGES="$(tr '\n' ' ' < packages.list)" \
   FILES=files
 
-cp -v bin/targets/armsr/armv8/generic-rootfs.tar.gz ./rootfs.tar.gz
+make image PROFILE=generic PACKAGES="$PKGS" ROOTFS_TAR=./rootfs.tar.gz V=s
+
 ls -lh ./rootfs.tar.gz
