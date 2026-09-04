@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
+# 开启严格错误模式 make image失败脚本直接退出，CI步骤变红
+set -euo pipefail
 
-# Build iStoreOS rootfs using ImageBuilder
-# Target: armsr/armv8
+cd "$(dirname "$0")"
 
-make image \
-  PACKAGES="$(tr '\n' ' ' < packages.list)" \
-  FILES=files
+make image PROFILE=armsr PACKAGES="$(cat packages.list)" V=s
+
