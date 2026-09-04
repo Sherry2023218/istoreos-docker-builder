@@ -4,5 +4,5 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-make image PROFILE=armsr PACKAGES="$(cat packages.list)" V=s
+make image PROFILE=generic PACKAGES="$(cat packages.list)" V=s
 
