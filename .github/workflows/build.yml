@@ -1,76 +1,88 @@
-name: Build iStoreOS‑Docker ARM64(armsr) rootfs
-permissions:
-  contents: read
-  packages: write
+name: Build iStoreOS‑armsr Docker Image
+
 on:
-  workflow_dispatch: # 网页手动触发编译，不需要push自动编译就注释掉push
-#  push:
-#    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  GHCR_IMAGE: ghcr.io/sherry2023218/istoreos‑armsr:latest
+
 jobs:
-  build_armsr:
-    runs-on: ubuntu-22.04
-    env:
-      GHCR_IMAGE: ghcr.io/sherry2023218/istoreos-armsr:latest
+  build:
+    runs-on: ubuntu‑22.04
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y tar zstd wget curl bzip2
+          sudo apt install -y tar zstd wget curl bzip2 tree
+
       - name: Cache ImageBuilder tar.zst
         uses: actions/cache@v4
         with:
-          path: targets/armsr/imagebuilder.tar.zst
-          key: ib-armsr-armv8-20260904
+          path: |
+            targets/armsr/imagebuilder.tar.zst
+            targets/armsr/Makefile
+            targets/armsr/package
+            targets/armsr/target
+          key: ib‑armsr‑armv8‑20260904
+
       - name: Download iStoreOS ImageBuilder armsr (arm64)
         run: |
           cd targets/armsr
-          # 缓存不存在才下载，避免每次拉280MB大包
           if [ ! -f "imagebuilder.tar.zst" ];then
-            wget --tries=10 --retry-connrefused -O imagebuilder.tar.zst "https://fw0.koolcenter.com/iStoreOS/ib/armsr/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst"
+            wget --tries=10 --retry‑connrefused -O imagebuilder.tar.zst "https://fw0.koolcenter.com/iStoreOS/ib/armsr/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst"
           fi
-          tar -I zstd -xf imagebuilder.tar.zst --strip-components=1
+          # Makefile存在说明已经解压完成，跳过解压
+          if [ ! -f "Makefile" ];then
+            tar -I zstd -xf imagebuilder.tar.zst --strip‑components=1
+          fi
+
       - name: Fix uci‑defaults execute permission
         run: |
-          mkdir -p targets/armsr/files/etc/uci-defaults
-          chmod +x targets/armsr/files/etc/uci-defaults/* 2>/dev/null || true
+          mkdir -p targets/armsr/files/etc/uci‑defaults
+          chmod +x targets/armsr/files/etc/uci‑defaults/* 2>/dev/null || true
+
       - name: Execute build.sh generate rootfs.tar.gz
         run: |
           cd targets/armsr
           chmod +x ./build.sh
           ./build.sh
+        # ❗移除 continue‑on‑error，构建失败直接终止job
+
+      # -------- 参考wukong：构建完成立刻打印产物目录，提前暴露问题 --------
+      - name: Show build output files
+        run: |
+          cd targets/armsr
+          echo "==== Search rootfs.tar.gz ===="
+          find . -name "rootfs.tar.gz"
+          echo "==== bin directory ===="
+          ls -la bin/targets/armsr/generic/
+
       - name: Upload rootfs artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload‑artifact@v4
         with:
-          name: istoreos-docker-armsr-armv8-rootfs
-          path: targets/armsr/bin/*.tar.gz
+          name: rootfs‑artifact
+          path: targets/armsr/bin/targets/armsr/generic/rootfs.tar.gz
+
       - name: Copy rootfs.tar.gz to context root
         run: |
-          echo "=== 搜索rootfs.tar.gz ==="
-          find . -name "rootfs.tar.gz"
-          TAR_FILE=$(find . -name "rootfs.tar.gz" | head -n1)
-          if [ -z "$TAR_FILE" ];then
-            echo "❌ 找不到rootfs.tar.gz！编译没有生成该文件"
-            ls -laR targets/armsr
-            exit 1
-          fi
-          echo "✅ 找到tar包：$TAR_FILE"
-          cp "$TAR_FILE" targets/armsr/
-      # ========== 新增：构建Docker镜像并推送ghcr.io ==========
+          cp targets/armsr/bin/targets/armsr/generic/rootfs.tar.gz ./
+
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup‑buildx‑action@v3
+
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login‑action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build and push docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build‑push‑action@v6
         with:
-          context: ./targets/armsr
-          file: ./targets/armsr/Dockerfile
-          platforms: linux/arm64
+          context: .
           push: true
           tags: ${{ env.GHCR_IMAGE }}
