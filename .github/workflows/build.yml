@@ -25,13 +25,13 @@ jobs:
       - name: Download iStoreOS ImageBuilder armsr (arm64)
         run: |
           cd targets/armsr
+          # 关键：先清理runner遗留解压产物！只保留git提交的文件
+          rm -rf Makefile package target bin build_dir staging_dir tmp files
           if [ ! -f "imagebuilder.tar.zst" ];then
             wget --tries=10 --retry-connrefused -O imagebuilder.tar.zst "https://fw0.koolcenter.com/iStoreOS/ib/armsr/istoreos-imagebuilder-armsr-armv8.Linux-x86_64.tar.zst"
           fi
-          # 关键：只有Makefile不存在才解压，不要每次运行都解压！
-          if [ ! -f "Makefile" ];then
-            tar -I zstd -xf imagebuilder.tar.zst --strip-components=1
-          fi
+          # 解压压缩包，每次都解压，前面已经rm清理干净目录，不怕重复解压
+          tar -I zstd -xf imagebuilder.tar.zst --strip-components=1
 
       - name: Fix uci-defaults execute permission
         run: |
