@@ -44,6 +44,10 @@ else
 fi
 
 
-make image \
-  PACKAGES="$(tr '\n' ' ' < packages.list) luci-app-openclash luci-compat bash curl ca-bundle ip-full iptables-mod-extra kmod-tun kmod-inet-diag unzip" \
-  FILES=files
+make image PROFILE=generic PACKAGES="$PKGS" ROOTFS_TAR=./rootfs.tar.gz V=s
+
+ROOT_DIR="./build_dir/target-aarch64_generic_musl/root-armsr"
+tar --exclude=./dev -czf ./rootfs.tar.gz -C "${ROOT_DIR}" .
+
+echo "Generated rootfs.tar.gz:"
+ls -lh ./rootfs.tar.gz
